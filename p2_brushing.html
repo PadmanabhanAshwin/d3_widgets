@@ -608,7 +608,7 @@
                                 d3.select("#d11")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cx',function (d) { return XScale[0](d[value]) })
                             }
                             else if (id == "xSelectBR"){
@@ -626,7 +626,7 @@
                                 d3.select("#d01")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cx',function (d) { return XScale[1](d[value]) })
                             } 
                             
@@ -645,7 +645,7 @@
                                 d3.select("#d10")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cx',function (d) { return XScale[2](d[value]) })
                             }
                             else if (id == "xSelectTR"){
@@ -663,7 +663,7 @@
                                 d3.select("#d00")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cx',function (d) { return XScale[3](d[value]) })
                             }
                         }
@@ -687,7 +687,7 @@
                                 d3.select("#d11")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cy',function (d) { return YScale[0](d[value]) })
                             }
                             else if( id == "ySelectBR"){
@@ -705,7 +705,7 @@
                                 d3.select("#d01")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cy',function (d) { return YScale[1](d[value]) })
                             }  
                             else if( id == "ySelectTL"){
@@ -723,7 +723,7 @@
                                 d3.select("#d10")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cy',function (d) { return YScale[2](d[value]) })
                             }   
                             else if( id == "ySelectTR"){
@@ -741,7 +741,7 @@
                                 d3.select("#d00")                                   // select the cell of change. 
                                     .selectAll('circle')                            // move the circles
                                     .transition().duration(1000)
-                                    .delay(function (d,i) { return i*100})
+                                    .delay(function (d,i) { return i*10})
                                     .attr('cy',function (d) { return YScale[3](d[value]) })
                             }                 
                     }
