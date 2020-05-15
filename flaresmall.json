@@ -1,0 +1,38 @@
+{
+   "name": "flare",
+   "children": [
+      {
+       "name": "lean",
+       "children": [
+          {"name":"Wisconsin","size":87},
+          {"name":"Georgia","size":483}
+       ]
+      },
+      {
+       "name": "likely",
+       "children": [
+          {"name":"South Carolina","size":223},
+          {"name":"Tennesee","size":227},
+          {"name":"Oklahoma","size":140}
+       ]
+      },
+      {
+       "name": "solid",
+       "children": [
+          {"name":"Idaho","size":52},
+          {"name":"South Dakota","size":29},
+          {"name":"Wyoming","size":16},
+          {"name":"Alabama","size":199},
+          {"name":"Nebraska","size":42},
+          {"name":"Texas","size":1099}
+       ]
+      },
+      {
+       "name": "tossup",
+       "children": [
+          {"name":"Florida","size":799},
+          {"name":"Kansas","size":91}
+       ]
+      }
+    ]
+  }

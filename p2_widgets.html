@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<meta charset='utf-8'>
+<title>  </title>
+<html>
+  <head>
+    <title> Dynamic Bubble Chart </title>
+    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <!-- Add a slider -->
+    <div class="Inputs">
+            Circle Size Slider:<br><input type="range" name="mySlider" id=mySlider min="10" max="40" value="10" >
+      </div>
+    <style type="text/css">
+        .Inputs input{
+           margin-top: 1em;  
+        }
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            position: relative;
+            width: 1060px;
+                background-color : #e8ebee;
+        }
+        .axis text {
+            font: 10px sans-serif;
+        }
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: #000;
+            shape-rendering: crispEdges;
+        }
+        .bar {
+            fill: steelblue;
+            fill-opacity: .9;
+        }
+        .select
+        {
+        left: 10000;
+        bottom: 1000;
+        }
+        .dot {
+                stroke:black;
+            }
+        .label {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+  </head>
+  <body>
+        <svg width="400 " height="120" transform="translate(860,511)" >                 
+                <circle cx="70" cy="80" r="4" stroke= "black" stroke-width="1" fill="none" id="smallcircle" />
+                <circle cx="70" cy="65" r="20" stroke= "black " stroke-width="1" fill="none" id= "mediumcircle"/>
+                <circle cx="70" cy="45" r="40" stroke= "black " stroke-width="1" fill="none" id= "largecircle"/>
+              </svg>
+
+    <script type="text/javascript">
+    d3.csv('factbook.csv',function (data) {
+    //console.log(data)
+
+        var body = d3.select('body')
+        var selectData=[ { "text" : "  GDP per capita "},
+                            { "text" : " Life expectancy at birth" },
+                            { "text" :"  Population " },
+                            { "text" : " Birth rate"},
+                        ]
+
+        var pp= data.map(d=> d["  GDP per capita "]);
+        var sizeScale1 = d3.scale.linear().domain([d3.min(pp),d3.max(pp)]).range([ 4, 10]);
+        body.append('br')    
+        // Select X-axis Variable
+        var span = body.append('span')
+                .text('X-Axis: ')
+                .attr("transform", "translate(" + 1000 + "," + 0 + ")");
+        
+        var yInput = body.append('select')      //why is this yInput? Should it not be xInput? But never being used. 
+            .attr('id','xSelect')
+            .on('change',xChange)
+            .selectAll('option')
+            .data(selectData)
+            .enter()
+            .append('option')
+            .attr('value', function (d) { return d.text })
+            .text(function (d) { return d.text ;})
+            .attr("transform", "translate(" + 1000 + "," + 0 + ")");
+        //body.append('br')
+
+        // Select Y-axis Variable
+        var span = body.append('span')
+            .text('Y-Axis: ')
+
+        var yInput = body.append('select') 
+            .attr('id','ySelect')
+            .on('change',yChange)
+            .selectAll('option')
+            .data(selectData)
+            .enter()
+            .append('option')
+            .attr('value', function (d) { return d.text })
+            .text(function (d) { return d.text ;})
+   //body.append('br')
+        
+        // Select Circle Variable
+        var span = body.append('span')
+            .text('Circle Size: ')
+        var circleInput = body.append('select')
+            .attr('id','csize')
+            .on('change',sizeChange)
+            .selectAll('option')
+            .data(selectData)
+            .enter()
+            .append('option')
+            .attr('value', function (d) { return d.text })
+            .text(function (d) { return d.text ;})
+        //body.append('br')
+
+        // Select Colour Variable
+        var span = body.append('span')
+            .text('Color : ')
+        var colourInput = body.append('select')
+            .attr('id','colour')
+            .on('change',colorChange)
+            .selectAll('option')
+            .data(selectData)
+            .enter()
+            .append('option')
+            .attr('value', function (d) { return d.text })
+            .text(function (d) { return d.text ;})
+        body.append('br') 
+        body.append('br') 
+
+        d3.select("#mySlider")
+          .on("change", function(d){
+            var sel = document.getElementById('csize');
+            value1 = sel.options[sel.selectedIndex].value; 
+            console.log(value1)
+            selectedValue = this.value
+            console.log(selectedValue)
+            ScaleBubbleSize(selectedValue, value1)
+        })
+
+        body.append('br') 
+        
+//Input done ---------------------------------------------------------------------------------------------
+        //page setup
+        var fullHeight= 250;
+        var margin = {top: 30, right: 100, bottom: 70, left: 100},
+        width = 1060 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
+        //var formatPercent = d3.format('.2%')
+
+        // Scales and Axis. 
+
+        //var colorScale = d3.scale.category20()
+        //X scale and axis definition: 
+        var xValue = data.map(d=>+d["  GDP per capita "] )
+        xScale = d3.scale.linear().domain([d3.min(xValue), d3.max(xValue) + 1000]).range([0, width]);
+        xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+
+        //Y Scale and axis definition: 
+        var yValue = data.map(d=>+d["  GDP per capita "] )
+        //console.log(d3.max(yValue));
+        yScale = d3.scale.linear().domain([d3.min(yValue), d3.max(yValue)]).range([height, 0]);
+        yAxis = d3.svg.axis().scale(yScale).orient("left");
+
+        //Color Scale:
+        var colorvar= data.map(d=> +d["  GDP per capita "])
+        var test= (d3.max(colorvar)- d3.min(colorvar))/5;
+        //var color_scale = d3.scale.linear().domain([d3.min(birth),d3.max(birth)]).range(['red','orange','white','purple','blue']);
+        var color_scale = d3.scale.linear().domain([d3.min(colorvar),(d3.min(colorvar)+(test * 1)),(d3.min(colorvar)+(test * 2)),(d3.min(colorvar)+(test * 3)),d3.max(colorvar)]).range(['#edf8fb','#b3cde3','#8c96c6','#8856a7','#810f7c']);
+
+        //Scale for bubble size. 
+        var pp= data.map(d=> d["  GDP per capita "]);
+        var sizeScale1 = d3.scale.linear().domain([d3.min(pp),d3.max(pp)]).range([ 4, 10]);
+        var sizeScale = d3.scale.linear().domain([d3.min(pp),d3.max(pp)]).range([ 4, 10]);
+        
+        console.log(sizeScale(d3.max(pp)))
+
+        //SVG setup
+        var svg1 = body.append("svg") //svg1 is the largest plot area.
+            .attr("width", 1060)
+            .attr("height", 500)
+            //.append("g")
+            
+        var svg = svg1.append("svg")    //Graph plot area. 
+            .attr("width", width-200 + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        
+        // X-axis
+        var xAxis = d3.svg.axis()
+            .scale(xScale)
+            //.tickFormat(formatPercent)
+            .ticks(4)
+            .orient('bottom')
+        // Y-axis
+        var yAxis = d3.svg.axis()
+            .scale(yScale)
+            //.tickFormat(formatPercent)
+            .ticks(4)
+            .orient('left')
+
+        //Plot circles
+        svg.selectAll(".dot")
+            .attr("id", "plotcircle")
+            .data(data)
+            .enter()
+            .append("circle")
+            .attr("class", "dot")
+            .attr("r", function (d) { return sizeScale(d["  GDP per capita "]); } )
+            .attr("cx", function (d) { return xScale(d["  GDP per capita "]); } )
+            .attr("cy", function (d) { return yScale(d["  GDP per capita "]); })
+            .style("fill", function (d) { return color_scale(d["  GDP per capita "]); } )
+        
+        //Call x-axis
+        svg.append("g")
+            .attr("class", "x axis")
+            .attr('id','xAxis')
+            .attr("transform", "translate(10," + height + ")")
+            .call(xAxis)
+            .append("text")
+            .attr("class", "label")
+            .attr("id", "xAxisLabel")
+            //.attr("transform", "translate("+ width/2 +","+ (250) +")")
+            .attr("x", width/2)
+            .attr("y", 40)
+            .style("text-anchor", "middle")
+            .text("GDP per capita");
+
+        // y-axis
+        svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(0,0)")
+            .attr('id','yAxis')
+            .call(yAxis)
+            .append("text")
+            .attr("class", "label")
+            .attr("id", "yAxisLabel")
+            .attr("transform", "translate("+ -(margin.left-15) +","+(height/2)+")rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .style("text-anchor", "middle")
+            .text("GDP per capita");
+        
+        //Legend 
+        height1 = 500;
+        width1 = 150;
+        
+        //Inside Legend creating gradient to append graphical unit using defs (x,y show direction of gradient)
+        var gradient = svg1.append('defs')
+            .append('linearGradient')
+            .attr('id', 'gradient')
+            .attr('x1', '0%') // bottom
+            .attr('y1', '100%')
+            .attr('x2', '0%') // to top
+            .attr('y2', '0%');
+            // .attr('spreadMethod', 'pad');
+            
+        //setting color over the axis 
+        gradient.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", "#edf8fb")
+            .attr("stop-opacity", 1);
+
+        gradient.append("stop")
+            .attr("offset", "25%")
+            .attr("stop-color", "#b3cde3")
+            .attr("stop-opacity", 1);
+
+        gradient.append("stop")
+            .attr("offset", "50%")
+            .attr("stop-color", "#8c96c6")
+            .attr("stop-opacity", 1);
+
+        gradient.append("stop")
+            .attr("offset", "75%")
+            .attr("stop-color", "#8856a7")
+            .attr("stop-opacity", 1);
+    
+        gradient.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", "#810f7c")
+            .attr("stop-opacity", 1);
+        
+        //Create a rectagle to show the legend scale. 
+        var legend = svg1.append("rect")
+            .attr("width", 20)
+            .attr("height", height1 - 250)
+            .style("fill", "url(#gradient)")
+            .attr('stroke', 'black')
+            .attr("transform", "translate("+ 880 +","+20+")");
+        
+            var gdplegend= data.map(d=> +d["  GDP per capita "])
+
+            //Create a colour legend scale. 
+            var legendScale = d3.scale.linear()
+                        .range([0,(height1 - 250)])
+                        .domain([d3.max(gdplegend), d3.min(gdplegend)]);
+
+            var legendaxis = d3.svg.axis()
+                                .scale(legendScale)    
+                                .orient("right")
+                                .ticks(4)
+                                .tickSize(3);
+
+            svg1.append("g")
+                .attr("class", "y axis")
+                .attr("transform", "translate("+ 880 +","+ 20 +")")
+                .attr("id", "legendaxis")
+                //.attr("transform", "translate(10," + height + ")")
+                .call(legendaxis)
+                .selectAll("text")
+                .attr("y", 0)
+                .attr("x", 25);
+                
+            svg1.append("text")
+                .attr("class", "legendTitle")
+                .attr('id','ylegend')
+                .attr("x", 880)
+                .attr("y", 12)
+                .style("text-decoration", "underline")
+                .text("GDP per capita");
+
+        // Creating circles for circle legend 
+
+            var valuesToShow = [d3.min(gdplegend),(d3.max(gdplegend)+d3.min(gdplegend))/2,d3.max(gdplegend)];
+            var xCircle = width1-100; // Postiion of the circles
+            var xLabel = 380;
+            var yCircle = height1-100; //Positioning the y scale of the circle. 
+
+            d3.select("#smallcircle")
+               .attr("r",sizeScale(d3.min(gdplegend)) )
+              .attr("cy",85 - sizeScale(d3.min(gdplegend)) )
+            
+            d3.select("#mediumcircle")
+               .attr("r",sizeScale( (d3.max(gdplegend)+d3.min(gdplegend))/2 ) )
+              .attr("cy",85 - sizeScale(((d3.max(gdplegend)-d3.min(gdplegend))/2)) )
+            
+            d3.select("#largecircle")
+              .attr("r",sizeScale( d3.max(gdplegend)) )
+              .attr("cy",85 - sizeScale(d3.max(gdplegend)))
+            
+            svg1.selectAll("legend")
+                .attr("id","circlelegendvalues")
+                .data(valuesToShow)
+                .enter()
+                .append("text")
+                .attr("id", function(d,i){ return "legendtext"+i})
+                .attr('x',width+130 )
+                .attr('y',function(d,i){ return yCircle+5-20*i})
+                .text( function(d){ return d } )
+                .style("font-size", "10px")
+                .attr('alignment-baseline', 'middle')
+                
+            svg1.append("text")
+                .attr("class", "legendTitle")
+                .attr('id','circlelegend')
+                .attr("x", width+30)
+                .attr("y", height1-65)
+                //.style("fill"," Red")
+                .style("text-decoration", "underline")
+                .text("GDP Per capita");
+//---------------------------------------------------------------------------------------------------------
+        // Defining functions that drive the transitions:     
+        function xChange() {
+            var value = this.value // get the new x value
+            //xValue.remove()
+            var xValue = data.map(d=>+d[value] )
+            xScale.domain([d3.min(xValue), d3.max(xValue)])
+
+            xAxis.scale(xScale) 
+            
+            d3.select('#xAxis') // redraw the xAxis
+                .transition().duration(50)
+                .call(xAxis)
+
+            d3.select('#xAxisLabel') // change the xAxisLabel
+                .transition().duration(50)
+                .text(value)
+
+            svg1.selectAll('circle') // move the circles
+                .transition().duration(50)
+                .delay(function (d,i) { return i*10})
+                .attr('cx',function (d) { return xScale(d[value]) })
+        }
+
+        function yChange() {
+            var value = this.value // get the new y value
+            var yValue = data.map(d=>+d[value] )
+            yScale.domain([d3.min(yValue), d3.max(yValue)])
+
+            yAxis.scale(yScale) // change the yScale
+
+            d3.select('#yAxis') // redraw the yAxis
+                .transition().duration(50)
+                .call(yAxis)
+
+            d3.select('#yAxisLabel') // change the yAxisLabel
+                .text(value)    
+            
+            svg1.selectAll('circle') // move the circles
+                .transition().duration(50)
+                .delay(function (d,i) { return i*10})
+                    .attr('cy',function (d) { return yScale(d[value]) })
+        }
+
+        function sizeChange() {
+            var value = this.value; 
+            console.log(value)
+            var sizevalue = data.map(d=>+d[value] ) ; 
+            var valuesToShow = [d3.min(sizevalue),(d3.max(sizevalue)+d3.min(sizevalue))/2,d3.max(sizevalue)]   
+            sizeScale.domain([d3.min(sizevalue), d3.max(sizevalue)]) ; 
+            var yCircle = height1-100; 
+
+            svg1.selectAll('circle') // resize the circles
+                .transition().duration(10)
+                .delay(function (d,i) { return i*10})
+                    .attr('r',function (d) { return sizeScale(d[value]) })
+
+            svg1.select('#circlelegend') // change the circle legend Label
+                    .text(value)
+            
+            // Change the size of the circles in the legend. 
+
+            d3.select("#smallcircle")
+               .attr("r",sizeScale(d3.min(sizevalue)) )
+              .attr("cy",85 - sizeScale(d3.min(sizevalue)) )
+            
+            d3.select("#mediumcircle")
+               .attr("r",sizeScale( (d3.max(sizevalue)+d3.min(sizevalue))/2 ) )
+              .attr("cy", (85 - sizeScale(((d3.max(sizevalue)+d3.min(sizevalue))/2))) )
+            
+            d3.select("#largecircle")
+              .attr("r",sizeScale( d3.max(sizevalue)) )
+              .attr("cy",85 - sizeScale(d3.max(sizevalue)))
+
+            for (l=0; l<valuesToShow.length; l++){
+                svg1.selectAll("#legendtext"+l)
+                    .text( valuesToShow[l])
+            }
+        }
+
+        function colorChange() {
+            var value = this.value; 
+            var colorvar1= data.map(d=> +d[value]);
+            var test1= (d3.max(colorvar1)- d3.min(colorvar1))/5;
+
+            color_scale.domain([d3.min(colorvar1),(d3.min(colorvar1)+(test1 * 1)),(d3.min(colorvar1)+(test1 * 2)),(d3.min(colorvar1)+(test1 * 3)),d3.max(colorvar1)])
+            
+            svg1.selectAll('circle') // resize the circles
+                .transition().duration(20)
+                .delay(function (d,i) { return i*10})
+                    .style("fill", function (d) { return color_scale(d[value]); } )
+                    d3.select('#ylegend') // change the xAxisLabel
+                 .text(value)
+                        
+            legendScale.domain([ d3.max(colorvar1),d3.min(colorvar1)])
+            legendaxis.scale(legendScale)
+
+            svg1.selectAll("#legendaxis")
+                .transition().duration(100)
+                .call(legendaxis)
+                .selectAll("text")
+                .attr("y", 0)
+                .attr("x", 25);
+        }
+       
+        function ScaleBubbleSize(bubblescale, value) {
+            console.log(bubblescale)
+            var sizevalue = data.map(d=>+d[value] ) ; 
+            console.log(sizevalue)
+            sizeScale.range([4,bubblescale]) ; 
+
+            svg1.selectAll('circle') // resize the circles
+                .transition().duration(1)
+                .delay(function (d,i) { return i*10})
+                    .attr('r',function (d) { return sizeScale(d[value]) })
+            
+        }   
+    });
+    </script>
+  </body>
+</html>

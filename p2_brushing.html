@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title> Matrix Bubble Plot </title>
+        <script type="text/javascript" src="d3/d3.js"></script>
+        <style type="text/css">
+        select { 
+            position: absolute; 
+            left: 50px;
+             top: 50px; 
+        }
+        span {
+            position: absolute; 
+            left: 50px;
+            top: 50px;
+        }
+        #xSelect1{
+            top : 200px; 
+            bottom: 400px;
+        }
+        .axis--x path {
+            display: inline;
+            }
+        .line {
+            fill: none;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+            }
+        .dot {
+                stroke:black;
+        }
+        circle {
+            fill-opacity: 0.95;
+        }
+        circle.hidden {
+            fill: #ccc !important;
+        }
+        .extent {
+            fill: #000;
+            fill-opacity: .125;
+            stroke: #fff;
+        }
+  
+        </style>
+        
+</head>
+    <body>
+            <div class="Inputs">
+                    Slider (Left Bottom):<input type="range" name="mySliderLB" id="mySliderLB" min="20" max="50" value="20" >
+                    Slider (Right Bottom):<input type="range" name="mySliderRB" id="mySliderRB" min="20" max="50" value="20" >
+                    Slider (Left Top):<input type="range" name="mySliderLT" id="mySliderLT" min="20" max="50" value="20" >
+                    Slider (Right Top):<input type="range" name="mySliderRT" id="mySliderRT" min="20" max="50" value="20" >
+            </div>
+            <script type="text/javascript">
+            //Define the "margins" which will be used to set up the SVG container.        
+            //Import data AJAX call: 
+            
+            d3.csv("factbook.csv")
+                .then(function(data) {
+                   function onlyUnique(value, index, self) { 
+                        return self.indexOf(value) === index;
+                    }
+                   // Setting Size. ------------------------------------------------------------------------
+                   //-----------------------------------------------------------------------------------------
+                   var columns = ["  GDP per capita ", "  GDP per capita "];
+
+                   width = 900; 
+                   padding = 100;
+                   size = (width - (columns.length + 1) * padding) / columns.length + padding
+                   n = columns.length;
+                   
+                   // Setting Scales. ------------------------------------------------------------------------
+                   //-----------------------------------------------------------------------------------------
+                   var X1Scale  =  data.map(d => +d["  GDP per capita "])
+                   
+                   //Define X, Y, Colour, Size scale. 
+                   // #region 
+                    XScale = [d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([padding / 2, size - padding / 2]),
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([padding / 2, size - padding / 2]),
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([padding / 2, size - padding / 2]),
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([padding / 2, size - padding / 2])]
+                                        
+                    YScale = [d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([size - padding / 2, padding / 2])  ,
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([size - padding / 2, padding / 2]),
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([size - padding / 2, padding / 2]),
+                            d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).rangeRound([size - padding / 2, padding / 2]),]
+                    
+                    sizeScale =  [d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).range([4,20]),
+                                    d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).range([4,20]),
+                                    d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).range([4,20]),
+                                    d3.scaleLinear().domain([d3.min(X1Scale),d3.max(X1Scale)]).range([4,20])];
+                    
+                    //Color Scale:
+                    var colorvar= data.map(d=> +d["  GDP per capita "])
+                    var test= (d3.max(colorvar)- d3.min(colorvar))/5;
+                    var color_scale = d3.scaleLinear().domain([d3.min(colorvar),(d3.min(colorvar)+(test * 1)),(d3.min(colorvar)+(test * 2)),(d3.min(colorvar)+(test * 3)),d3.max(colorvar)]).range(['#edf8fb','#b3cde3','#8c96c6','#8856a7','#810f7c']);
+                   //#endregion
+                    
+
+
+                   // Start Drawing.------------------------------------------------------------------------
+                   
+                   // Outermost SVG------------------------------------------------------------------------ 
+                   //#region
+                   var svg = d3.select("body")
+                            .append("svg")
+                                .attr("width", width)
+                                .attr("height", width)
+                            .append("g")
+                                .attr("transform", "translate("+padding+","+padding+")");
+                                //.attr("transform", "translate(0,0");
+                            //.style("max-width", "100%")
+                            //.style("height", "auto");
+                    //#endregion
+
+                    // Define X Axis.------------------------------------------------------------------------
+                    //#region 
+                    var XAxisLeftBot = d3.axisBottom().scale(XScale[0]).ticks(3)
+                                        //.tickSize((size) * columns.length/2);
+                                        .tickSize(size - padding);
+                    var XAxisRightBot = d3.axisBottom().scale(XScale[1]).ticks(3)
+                                      .tickSize(size - padding);
+                    var XAxisLeftTop = d3.axisBottom().scale(XScale[2]).ticks(3)
+                                      .tickSize(size - padding);
+                    var XAxisRightTop = d3.axisBottom().scale(XScale[3]).ticks(3)
+                                      .tickSize((size - padding));
+
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("id", "XAxisLeftBot")
+                        .attr("transform", "translate(" + "0" + "," + width/2 + ")")
+                        .attr("stroke", "#ddd")
+                        .call(XAxisLeftBot)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "xAxisLeftBotLabel")
+                            //.attr("transform", "translate("+ width/2 +","+ (250) +")")
+                            .attr("x", 80)
+                            .attr("y", size- 20- padding/2  )
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");
+
+                   svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("id", "XAxisRightBot")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate(" + size + ","+ width/2 +")")
+                        .call(XAxisRightBot)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "xAxisRightBotLabel")
+                            .attr("x", 80)
+                            .attr("y", size- 20- padding/2  )
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");;	
+ 
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("id", "XAxisLeftTop")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate(" + 0 + "," + padding/2 + ")")
+                        .call(XAxisLeftTop)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "xAxisLeftTopLabel")
+                            .attr("x", 80)
+                            .attr("y", size- 20- padding/2  )
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");;	;
+                  
+                    svg.append("g")
+                        .attr("class", "x axis")
+                        .attr("id", "XAxisRightTop")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate("+ size+ ","+ padding/2+ ")")
+                        .call(XAxisRightTop)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "xAxisRightTopLabel")
+                            .attr("x", 80)
+                            .attr("y", size- 20- padding/2  )
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");;	;
+                    //#endregion
+                    
+                    // Define Y Axis.------------------------------------------------------------------------
+                    //#region
+                    var YAxisLeftBot = d3.axisLeft().scale(YScale[0]).ticks(3)
+                                    .tickSize(size - padding);
+                    var YAxisRightBot = d3.axisLeft().scale(YScale[1]).ticks(3)
+                                      .tickSize(size * columns.length/2 - padding);
+                    var YAxisLeftTop = d3.axisLeft().scale(YScale[2]).ticks(3)
+                                      .tickSize(size * columns.length/2- padding);
+                    var YAxisRightTop = d3.axisLeft().scale(YScale[3]).ticks(3)
+                                      .tickSize(size * columns.length/2- padding);
+                
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .attr("id", "YAxisLeftBot")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate("+ (size-padding/2)  + "," + (width/2 - padding/2) + ")")
+                        .call(YAxisLeftBot)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "yAxisLeftBotLabel")
+                            .attr("transform", "translate("+ (-size+ padding/3) +","+ (size/2) +")rotate(-90)")
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");
+
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .attr("id", "YAxisRightBot")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate(" + (2*size - padding/2) + "," + size + ")")
+                        .call(YAxisRightBot)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "yAxisRightBotLabel")
+                            .attr("transform", "translate("+ (-size+ padding/3) +","+ (size/2) +")rotate(-90)")
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");
+                       
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .attr("id", "YAxisLeftTop")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate(" + (size-padding/2) + "," + 0+ ")")
+                        .call(YAxisLeftTop)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "yAxisLeftTopLabel")
+                            .attr("transform", "translate("+ (-size+ padding/3) +","+ (size/2) +")rotate(-90)")
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");
+
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .attr("id", "YAxisRightTop")
+                        .attr("stroke", "#ddd")
+                        .attr("transform", "translate(" + (2*size - padding/2) + "," +0 + ")")
+                        .call(YAxisRightTop)
+                        .append("text")
+                            .attr("class", "label")
+                            .attr("id", "yAxisRightTopLabel")
+                            .attr("transform", "translate("+ (-size+ padding/3) +","+ (size/2) +")rotate(-90)")
+                            .style("text-anchor", "middle")
+                            .text("  GDP per capita ");     
+                    //#endregion
+                    
+                    // Define each Cell.------------------------------------------------------------------------
+                    //#region
+                    var cell = svg.selectAll(".cell")
+                        .data( d3.cross(d3.range(columns.length), d3.range(columns.length)) )
+                        .enter().append("g")
+                        .attr("id", function(d){ return "d"+d[0]+d[1]})
+                        .attr("class", "cell")
+                        .attr("transform", function(d) { return "translate(" + (n - d[0] - 1) * size + "," + d[1] * size + ")"; })
+                        .each(plot);
+                    //#endregion
+                    
+                    function plot(p) {
+                        var cell = d3.select(this)
+                            x = XScale[p[0]];
+                            y = YScale[p[1]];
+                            s= sizeScale[p[0]]
+                            
+                            cell.append("rect") 
+                                .attr("fill", "none")
+                                .attr("stroke", "#aaa")
+                                .attr("x", padding / 2 + 0.5)
+                                .attr("y", padding / 2 + 0.5)
+                                .attr("width", size - padding)
+                                .attr("height", size - padding);
+                            
+                            cell.selectAll(".dot")
+                                .data(data)
+                            .enter().append("circle")
+                                .attr("cx", function(d, i) { return x(d[columns[p[0]]] );})
+                                .attr("cy", function(d) { return y(d[columns[p[1]]]) ;})
+                                .attr("r", function(d) { return s(d[columns[p[0]]]) ;} )
+                                .style("fill", function(d) { return color_scale(d["  GDP per capita "]); })
+                                .style("stroke", "black");
+                    }
+
+                    //---- For drop down options: 
+                    var body = d3.select('body')
+                    var selectData=[ { "text" : "  GDP per capita "},
+                            { "text" : " Life expectancy at birth" },
+                            { "text" :"  Population " },
+                            { "text" : " Birth rate"},
+                        ]
+
+                    // BOTTOM LEFT Widget definition. 
+                    //#region
+                    var span = body.append('span')
+                                .style('left', '10px')
+                                .style('top', '515px')
+                                .text('X_BL ')
+
+                    var xInput = body.append('select')     
+                            .attr('id','xSelectBL') 
+                            .style('left', '60px')
+                            .style('top', '515px')
+                            .on('change',xChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+                            //Defining functions that drive the transitions:
+
+                    var span = body.append('span')
+                                .style('left', '220px')
+                                .style('top', '515px')
+                                .text('Y_BL')
+                    var yInput = body.append('select')     
+                            .attr('id','ySelectBL')
+                            .style('left', '260px')
+                            .style('top', '515px')
+                            .on('change',yChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+                    
+                    // Defining functions that drive the transitions:  
+                    // Select Circle Variable.
+                    var span = body.append('span')
+                        .text('Circle Size BL: ')
+                        .style('left', '10px')
+                        .style('top', '535px')
+                        .text('Circle_BL')
+                    var circleInput = body.append('select')
+                        .attr('id','csizeBL')
+                        .style('left', '80px')
+                        .style('top', '535px')
+                        .on('change',sizeChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+                    
+                    // Select Colour Variable
+                    var span = body.append('span')
+                        .text('Color Representation BL: ')
+                        .style('left', '240px')
+                        .style('top', '535px')
+                        .text('Colour_BL')
+                    var colourInput = body.append('select')
+                        .attr('id','colourBL')
+                        .style('left', '310px')
+                        .style('top', '535px')
+                        .on('change',colorChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;}) 
+                    //body.append('br') 
+                    //#endregion
+                    // BOTTOM RIGHT Widget definition. 
+                    //--------------/--------------/--------------/--------------/--------------/--------------
+                    //#region
+                    // Select X Axis BR:
+                    var span = body.append('span')
+                        .style('left', '500px')
+                        .style('top', '515px')
+                        .text('X_BR ')
+                    
+                    var xInput = body.append('select')  
+                            .attr('id','xSelectBR')
+                            .style('left', '550px')
+                            .style('top', '515px')
+                            .on('change',xChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+                    
+                    // Select Y Axis BR:
+                    var span = body.append('span')
+                            .style('left', '710px')
+                            .style('top', '515px')
+                            .text('Y_BR ')
+
+                    var yInput = body.append('select')     
+                            .attr('id','ySelectBR')
+                            .style('left', '760px')
+                            .style('top', '515px')
+                            .on('change',yChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+
+                    //Size BR
+                    var span = body.append('span')
+                        .style('left', '500px')
+                        .style('top', '535px')
+                        .text('Circle_BR')
+
+                    var circleInput = body.append('select')
+                        .attr('id','csizeBR')
+                        .style('left', '570px')
+                        .style('top', '535px')
+                        .on('change',sizeChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+
+                    //Color BR
+                    //Select Colour Variable
+                    var span = body.append('span')
+                        .style('left', '730px')
+                        .style('top', '535px')
+                        .text('Colour_BR')
+                    var colourInput = body.append('select')
+                        .attr('id','colourBR')
+                        .style('left', '810px')
+                        .style('top', '535px')
+                        .on('change',colorChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+                    //#endregion
+                    // Top Left Widget definition. 
+                    //--------------/--------------/--------------/--------------/--------------/--------------
+                    //#region
+                    // Top Left X Axis select. 
+                    var span = body.append('span')
+                                .style('left', '10px')
+                                .style('top', '80px')
+                                .text('X_TL ')
+
+                    var xInput = body.append('select')     
+                            .attr('id','xSelectTL') 
+                            .style('left', '50px')
+                            .style('top', '80px')
+                            .on('change',xChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+                    
+                    // Top Left Y Axis select. 
+                    var span = body.append('span')
+                                .style('left', '210px')
+                                .style('top', '80px')
+                                .text('Y_TL')
+                    var yInput = body.append('select')     
+                            .attr('id','ySelectTL')
+                            .style('left', '250px')
+                            .style('top', '80px')
+                            .on('change',yChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+
+                    // Top Left size Axis select. 
+                    var span = body.append('span')
+                        .style('left', '10px')
+                        .style('top', '100px')
+                        .text('Circle_TL')
+                    var circleInput = body.append('select')
+                        .attr('id','csizeTL')
+                        .style('left', '80px')
+                        .style('top', '100px')
+                        .on('change',sizeChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+
+                    // Select Colour Variable
+                    var span = body.append('span')
+                        .style('left', '240px')
+                        .style('top', '100px')
+                        .text('Colour_BL')
+                    var colourInput = body.append('select')
+                        .attr('id','colourTL')
+                        .style('left', '320px')
+                        .style('top', '100px')
+                        .on('change',colorChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+                    //#endregion
+                    // Top Right Widget definition. 
+                    //--------------/--------------/--------------/--------------/--------------/--------------
+                    //#region
+                    // Top Right X Axis select. 
+                    var span = body.append('span')
+                                .style('left', '500px')
+                                .style('top', '80px')
+                                .text('X_TR ')
+
+                    var xInput = body.append('select')     
+                            .attr('id','xSelectTR') 
+                            .style('left', '540px')
+                            .style('top', '80px')
+                            .on('change',xChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+
+                    // Top right Y Axis select. 
+                    var span = body.append('span')
+                                .style('left', '700px')
+                                .style('top', '80px')
+                                .text('Y_TR')
+                    var yInput = body.append('select')     
+                            .attr('id','ySelectTR')
+                            .style('left', '750px')
+                            .style('top', '80px')
+                            .on('change',yChange1)
+                            .selectAll('option')
+                            .data(selectData)
+                            .enter()
+                            .append('option')
+                            .attr('value', function (d) { return d.text })
+                            .text(function (d) { return d.text ;})
+
+                    //Size BT
+                    var span = body.append('span')
+                        .style('left', '500px')
+                        .style('top', '100px')
+                        .text('Circle_TR')
+
+                    var circleInput = body.append('select')
+                        .attr('id','csizeTR')
+                        .style('left', '570px')
+                        .style('top', '100px')
+                        .on('change',sizeChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+
+                    // Select Colour Variable
+                    var span = body.append('span')
+                        .style('left', '730px')
+                        .style('top', '100px')
+                        .text('Colour_TR')
+                    var colourInput = body.append('select')
+                        .attr('id','colourTR')
+                        .style('left', '810px')
+                        .style('top', '100px')
+                        .on('change',colorChange1)
+                        .selectAll('option')
+                        .data(selectData)
+                        .enter()
+                        .append('option')
+                        .attr('value', function (d) { return d.text })
+                        .text(function (d) { return d.text ;})
+                    //#endregion
+                    // Transition Functions. 
+                    
+                    function xChange1() {
+                            var value = this.value                              // get the new x value
+                            id = this.id
+                            console.log(id)
+                            var xValue = data.map(d=>+d[value] )
+
+                            if(id == "xSelectBL"){
+                                XScale[0].domain([d3.min(xValue), d3.max(xValue)])  
+                                XAxisLeftBot.scale(XScale[0])                       //Need to select Axis based on Cell. 
+                                
+                                d3.select('#XAxisLeftBot')                          // redraw the xAxis
+                                    .transition().duration(100)
+                                    .call(XAxisLeftBot)
+
+                                d3.select('#xAxisLeftBotLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+
+                                d3.select("#d11")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cx',function (d) { return XScale[0](d[value]) })
+                            }
+                            else if (id == "xSelectBR"){
+                                XScale[1].domain([d3.min(xValue), d3.max(xValue)])  
+                                XAxisRightBot.scale(XScale[1]) 
+
+                                d3.select('#XAxisRightBot')                          // redraw the xAxis
+                                    .transition().duration(100)
+                                    .call(XAxisRightBot)
+                                
+                                d3.select('#xAxisRightBotLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d01")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cx',function (d) { return XScale[1](d[value]) })
+                            } 
+                            
+                            else if (id == "xSelectTL"){
+                                XScale[2].domain([d3.min(xValue), d3.max(xValue)])  
+                                XAxisLeftTop.scale(XScale[2]) 
+
+                                d3.select('#XAxisLeftTop')                          // redraw the xAxis
+                                    .transition().duration(100)
+                                    .call(XAxisLeftTop)
+                                
+                                d3.select('#xAxisLeftTopLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d10")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cx',function (d) { return XScale[2](d[value]) })
+                            }
+                            else if (id == "xSelectTR"){
+                                XScale[3].domain([d3.min(xValue), d3.max(xValue)])  
+                                XAxisRightTop.scale(XScale[3]) 
+
+                                d3.select('#XAxisRightTop')                          // redraw the xAxis
+                                    .transition().duration(100)
+                                    .call(XAxisRightTop)
+                                
+                                d3.select('#xAxisRightTopLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d00")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cx',function (d) { return XScale[3](d[value]) })
+                            }
+                        }
+                    function yChange1() {
+                            var value = this.value                              // get the new x value
+                            id = this.id
+                            var yValue = data.map(d=>+d[value] )
+
+                            if( id == "ySelectBL"){
+                                YScale[0].domain([d3.min(yValue), d3.max(yValue)])  //Need to change Scale based on cell to be affected. 
+                                YAxisLeftBot.scale(YScale[0])                       //Need to select Axis based on Cell. 
+
+                                d3.select('#YAxisLeftBot')                          // redraw the yAxis
+                                    .transition().duration(100)
+                                    .call(YAxisLeftBot)
+
+                                d3.select('#yAxisLeftBotLabel')                     // change the yAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+
+                                d3.select("#d11")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cy',function (d) { return YScale[0](d[value]) })
+                            }
+                            else if( id == "ySelectBR"){
+                                YScale[1].domain([d3.min(yValue), d3.max(yValue)])
+                                YAxisRightBot.scale(YScale[1]) 
+                                
+                                d3.select('#YAxisRightBot')                          // redraw the yAxis
+                                    .transition().duration(100)
+                                    .call(YAxisRightBot)
+
+                                d3.select('#yAxisRightBotLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d01")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cy',function (d) { return YScale[1](d[value]) })
+                            }  
+                            else if( id == "ySelectTL"){
+                                YScale[2].domain([d3.min(yValue), d3.max(yValue)])
+                                YAxisLeftTop.scale(YScale[2]) 
+                                
+                                d3.select('#YAxisLeftTop')                          // redraw the yAxis
+                                    .transition().duration(100)
+                                    .call(YAxisLeftTop)
+
+                                d3.select('#yAxisLeftTopLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d10")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cy',function (d) { return YScale[2](d[value]) })
+                            }   
+                            else if( id == "ySelectTR"){
+                                YScale[3].domain([d3.min(yValue), d3.max(yValue)])
+                                YAxisRightTop.scale(YScale[3]) 
+                                
+                                d3.select('#YAxisRightTop')                          // redraw the yAxis
+                                    .transition().duration(100)
+                                    .call(YAxisRightTop)
+
+                                d3.select('#yAxisRightTopLabel')                     // change the xAxisLabel
+                                    .transition().duration(100)
+                                    .text(value)
+                                
+                                d3.select("#d00")                                   // select the cell of change. 
+                                    .selectAll('circle')                            // move the circles
+                                    .transition().duration(1000)
+                                    .delay(function (d,i) { return i*100})
+                                    .attr('cy',function (d) { return YScale[3](d[value]) })
+                            }                 
+                    }
+
+                    function sizeChange1() {
+                        var value = this.value; 
+                        id = this.id;
+                        var sizevalue = data.map(d=>+d[value] ) ; 
+
+                        if (id == "csizeBL"){
+                            sizeScale[0].domain([d3.min(sizevalue), d3.max(sizevalue)]) ; 
+
+                            d3.select("#d11")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(100)
+                            .delay(function (d,i) { return i*100})
+                            .attr('r',function (d) { return sizeScale[0](d[value]) })
+                        }
+                        else if (id == "csizeBR"){
+                            sizeScale[1].domain([d3.min(sizevalue), d3.max(sizevalue)]) ; 
+
+                            d3.select("#d01")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(100)
+                            .delay(function (d,i) { return i*100})
+                            .attr('r',function (d) { return sizeScale[1](d[value]) })
+                        }
+                        else if (id == "csizeTL"){
+                            sizeScale[2].domain([d3.min(sizevalue), d3.max(sizevalue)]) ; 
+
+                            d3.select("#d10")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(100)
+                            .delay(function (d,i) { return i*100})
+                            .attr('r',function (d) { return sizeScale[2](d[value]) })
+                        }
+                        else if (id == "csizeTR"){
+                            sizeScale[3].domain([d3.min(sizevalue), d3.max(sizevalue)]) ; 
+                            d3.select("#d00")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(100)
+                            .delay(function (d,i) { return i*100})
+                            .attr('r',function (d) { return sizeScale[3](d[value]) })
+                        }
+                    }
+
+                    function colorChange1() {
+                        var value = this.value; 
+                        var colorvar1= data.map(d=> +d[value]);
+                        var test1= (d3.max(colorvar1)- d3.min(colorvar1))/5;
+                        id = this.id
+
+                        if ( id == "colourBL"){
+                        color_scale.domain([d3.min(colorvar1),(d3.min(colorvar1)+(test1 * 1)),(d3.min(colorvar1)+(test1 * 2)),(d3.min(colorvar1)+(test1 * 3)),d3.max(colorvar1)])
+                        
+                        d3.select("#d11")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(20)
+                            .delay(function (d,i) { return i*100})
+                                .style("fill", function (d) { return color_scale(d[value]); } )
+                        }
+
+                        else if (id == "colourBR"){
+                            color_scale.domain([d3.min(colorvar1),(d3.min(colorvar1)+(test1 * 1)),(d3.min(colorvar1)+(test1 * 2)),(d3.min(colorvar1)+(test1 * 3)),d3.max(colorvar1)])
+
+                            d3.select("#d01")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(20)
+                            .delay(function (d,i) { return i*100})
+                                .style("fill", function (d) { return color_scale(d[value]); } )
+                        }
+                        else if (id == "colourTL"){
+                            color_scale.domain([d3.min(colorvar1),(d3.min(colorvar1)+(test1 * 1)),(d3.min(colorvar1)+(test1 * 2)),(d3.min(colorvar1)+(test1 * 3)),d3.max(colorvar1)])
+
+                            d3.select("#d10")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(20)
+                            .delay(function (d,i) { return i*100})
+                                .style("fill", function (d) { return color_scale(d[value]); } )
+                        }
+                        else if (id == "colourTR"){
+                            color_scale.domain([d3.min(colorvar1),(d3.min(colorvar1)+(test1 * 1)),(d3.min(colorvar1)+(test1 * 2)),(d3.min(colorvar1)+(test1 * 3)),d3.max(colorvar1)])
+
+                            d3.select("#d00")
+                            .selectAll('circle') // resize the circles
+                            .transition().duration(20)
+                            .delay(function (d,i) { return i*100})
+                                .style("fill", function (d) { return color_scale(d[value]); } )
+                        }
+                    }
+                
+                var brush = d3.brush()
+                    .on("start", brushstart)
+                    .on("brush", brushmove)
+                    .on("end", brushend)
+                    .extent([[0,0],[size,size]]);
+
+                cell.call(brush);
+
+                // Clear the previously-active brush, if any.
+                    //var brushCell;
+                    let brushCell; 
+                    function brushstart(p) {                        
+                        console.log(brushCell==this)
+                        if (brushCell !== this) {
+                            id = this.id;
+                            d3.select(brushCell).call(brush.move, null);
+                            console.log(brushCell)
+                            brushCell = this;
+                            console.log(brushCell)
+
+                            if(id == "d11"){
+                                value = d3.select('#xAxisLeftBotLabel')["_groups"][0][0]["textContent"]
+                                var xValue = data.map(d=>+d[value] )
+                                XScale[0].domain([d3.min(xValue), d3.max(xValue)])  
+                            }
+                            else if (id == "d01"){
+                                value = d3.select('#xAxisRightBotLabel')["_groups"][0][0]["textContent"]
+                                var xValue1 = data.map(d=>+d[value] )
+                                XScale[1].domain([d3.min(xValue1), d3.max(xValue1)])  
+                            } 
+                            else if (id == "d10"){
+                                value = d3.select('#xAxisLeftTopLabel')["_groups"][0][0]["textContent"]
+                                var xValue = data.map(d=>+d[value] )
+                                XScale[2].domain([d3.min(xValue), d3.max(xValue)])  
+                            }
+                            else if (id == "d00"){
+                                value = d3.select('#xAxisRightTopLabel')["_groups"][0][0]["textContent"]
+                                var xValue = data.map(d=>+d[value] )
+                                XScale[3].domain([d3.min(xValue), d3.max(xValue)])  
+                            }
+                            //Y axis. 
+                            if( id == "d11"){
+                                value = d3.select('#yAxisLeftBotLabel')["_groups"][0][0]["textContent"]
+                                var yValue = data.map(d=>+d[value] )
+                                YScale[0].domain([d3.min(yValue), d3.max(yValue)])  //Need to change Scale based on cell to be affected. 
+                            }
+                            else if( id == "d01"){
+                                value = d3.select('#yAxisRightBotLabel')["_groups"][0][0]["textContent"]
+                                var yValue = data.map(d=>+d[value] )
+                                YScale[1].domain([d3.min(yValue), d3.max(yValue)])
+                            }  
+                            else if( id == "d10"){
+                                value = d3.select('#yAxisLeftTopLabel')["_groups"][0][0]["textContent"]
+                                var yValue = data.map(d=>+d[value] )
+                                YScale[2].domain([d3.min(yValue), d3.max(yValue)])
+                            }   
+                            else if( id == "d00"){
+                                value = d3.select('#yAxisRightTopLabel')["_groups"][0][0]["textContent"]
+                                var yValue = data.map(d=>+d[value] )
+                                YScale[3].domain([d3.min(yValue), d3.max(yValue)])
+                            }     
+                        }
+                    } 
+
+                    // Highlight the selected circles.
+                    function brushmove(p) {
+                        var e = d3.brushSelection(this);
+                        id = this.id
+                                                
+                        svg.selectAll("circle").classed("hidden", function(d) {
+                            if (id == "d11" ){
+                                labelx = d3.select('#xAxisLeftBotLabel')["_groups"][0][0]["textContent"]
+                                labely = d3.select('#yAxisLeftBotLabel')["_groups"][0][0]["textContent"]
+
+                                valuex = data.map(d => +d[labelx])
+                                valuey = data.map(d => +d[labely])
+
+                                x = XScale[0].domain([d3.min(valuex), d3.max(valuex)]);
+                                y = YScale[0].domain([d3.min(valuey), d3.max(valuey)]);
+
+                                return ( e[0][0] > x(+d[labelx]) || x(+d[labelx]) > e[1][0]
+                                            || e[0][1] > y(+d[labely])  || y(+d[labely]) > e[1][1] 
+                                        )
+                            }
+                            else if (id == "d01" ){
+                                labelx = d3.select('#xAxisRightBotLabel')["_groups"][0][0]["textContent"]
+                                labely = d3.select('#yAxisRightBotLabel')["_groups"][0][0]["textContent"]
+
+                                valuex = data.map(d => +d[labelx])
+                                valuey = data.map(d => +d[labely])
+
+                                x = XScale[1].domain([d3.min(valuex), d3.max(valuex)]);
+                                y = YScale[1].domain([d3.min(valuey), d3.max(valuey)]);
+
+                                return ( e[0][0] > x(+d[labelx]) || x(+d[labelx] ) > e[1][0]
+                                            || e[0][1] > y(+d[labely])  || y(+d[labely]) > e[1][1] 
+                                        )
+                            }
+
+                            else if (id == "d10") {
+                                labelx = d3.select('#xAxisLeftTopLabel')["_groups"][0][0]["textContent"]
+                                labely = d3.select('#yAxisLeftTopLabel')["_groups"][0][0]["textContent"]
+
+                                valuex = data.map(d => +d[labelx])
+                                valuey = data.map(d => +d[labely])
+
+                                x = XScale[2].domain([d3.min(valuex), d3.max(valuex)]);
+                                y = YScale[2].domain([d3.min(valuey), d3.max(valuey)]);
+
+                                return ( e[0][0] > x(+d[labelx]) || x(+d[labelx] ) > e[1][0]
+                                            || e[0][1] > y(+d[labely])  || y(+d[labely]) > e[1][1] 
+                                        )
+                            }
+
+                            else if (id == "d00" ){
+                                labelx = d3.select('#xAxisRightTopLabel')["_groups"][0][0]["textContent"]
+                                labely = d3.select('#yAxisRightTopLabel')["_groups"][0][0]["textContent"]
+
+                                valuex = data.map(d => +d[labelx])
+                                valuey = data.map(d => +d[labely])
+
+                                x = XScale[3].domain([d3.min(valuex), d3.max(valuex)]);
+                                y = YScale[3].domain([d3.min(valuey), d3.max(valuey)]);
+
+                                return ( e[0][0] > x(+d[labelx]) || x(+d[labelx] ) > e[1][0]
+                                            || e[0][1] > y(+d[labely])  || y(+d[labely]) > e[1][1] 
+                                        )
+                            }
+                            });
+                    }
+                    
+                    function brushend() {
+                            var e = d3.brushSelection(this);
+                            if (e === null) 
+                                {
+                                    svg.selectAll(".hidden").classed("hidden", false);
+                                }
+                        }
+                    //#region
+                    d3.select("#mySliderLB")
+                        .on("change", function(d){
+                            var sel = document.getElementById('csizeBL');
+                            value1 = sel.options[sel.selectedIndex].value; 
+                            console.log(value1)
+                            selectedValue = this.value
+                            id = this.id
+                            console.log(id)
+                            console.log(selectedValue)
+                            ScaleBubbleSize(selectedValue, value1, id)})
+                    
+                    d3.select("#mySliderRB")
+                        .on("change", function(d){
+                            var sel = document.getElementById('csizeBR');
+                            value1 = sel.options[sel.selectedIndex].value; 
+                            console.log(value1)
+                            selectedValue = this.value
+                            id = this.id
+                            console.log(id)
+                            console.log(selectedValue)
+                            ScaleBubbleSize(selectedValue, value1, id)})
+                    
+                    d3.select("#mySliderLT")
+                        .on("change", function(d){
+                            var sel = document.getElementById('csizeTL');
+                            value1 = sel.options[sel.selectedIndex].value; 
+                            console.log(value1)
+                            selectedValue = this.value
+                            id = this.id
+                            console.log(id)
+                            console.log(selectedValue)
+                            ScaleBubbleSize(selectedValue, value1, id)})
+
+                    d3.select("#mySliderRT")
+                        .on("change", function(d){
+                            var sel = document.getElementById('csizeTR');
+                            value1 = sel.options[sel.selectedIndex].value; 
+                            console.log(value1)
+                            selectedValue = this.value
+                            id = this.id
+                            console.log(id)
+                            console.log(selectedValue)
+                            ScaleBubbleSize(selectedValue, value1, id)})
+                    //#endregion
+                    
+                    function ScaleBubbleSize(bubblescale, value, id) {
+                        var sizevalue = data.map(d=>+d[value] ) ; 
+                        console.log(sizevalue)
+
+                        if ( id == "mySliderLB"){
+                            sizeScale[0].range([4,bubblescale]) ; 
+
+                            d3.select("#d11").selectAll('circle') // resize the circles
+                                .transition().duration(1)
+                                .delay(function (d,i) { return i*100})
+                                    .attr('r',function (d) { return sizeScale[0](d[value]) })
+                        }
+
+                        if ( id == "mySliderRB"){
+                            sizeScale[1].range([4,bubblescale]) ; 
+
+                            d3.select("#d01").selectAll('circle') // resize the circles
+                                .transition().duration(1)
+                                .delay(function (d,i) { return i*100})
+                                    .attr('r',function (d) { return sizeScale[1](d[value]) })
+                        }
+                        if ( id == "mySliderLT"){
+                            sizeScale[2].range([4,bubblescale]) ; 
+
+                            d3.select("#d10").selectAll('circle') // resize the circles
+                                .transition().duration(1)
+                                .delay(function (d,i) { return i*100})
+                                    .attr('r',function (d) { return sizeScale[2](d[value]) })
+                        }
+                        if ( id == "mySliderRT"){
+                            sizeScale[3].range([4,bubblescale]) ; 
+
+                            d3.select("#d00").selectAll('circle') // resize the circles
+                                .transition().duration(1)
+                                .delay(function (d,i) { return i*100})
+                                    .attr('r',function (d) { return sizeScale[3](d[value]) })
+                        }
+                    } 
+                
+                })
+        </script>
+    </body>
+</html>
